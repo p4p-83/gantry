@@ -39,6 +39,9 @@ volatile bool haltSteppers = true;
 // main logic occuring each time a new time slice arrives
 static bool timeSliceEvent(repeating_timer_t *culprit) {
 
+	// lock
+	haltSteppers = true;
+
 	// observe the changing of time
 	free(stepsLastSlice);
 	stepsLastSlice = stepsThisSlice;
@@ -50,7 +53,10 @@ static bool timeSliceEvent(repeating_timer_t *culprit) {
 		// adjust timers
 
 	// TODO print the last step counts to USB
-
+	
+	// unlock
+	haltSteppers = false;	// TODO should this stay true if there is no movement to make?
+	
 }
 
 static bool makeStep(repeating_timer_t *culprit) {
