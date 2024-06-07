@@ -30,8 +30,9 @@ const stepperPinout_t stepperPins[NUM_AXES] = {
 static repeating_timer_t timeSliceTimer, stepTimer[NUM_AXES];
 
 static stepCount_t *stepsLastSlice, *stepsThisSlice, *stepsNextSlice;
+static timerUserData_t userData[NUM_AXES];
 
-volatile bool haltSteppers = false;
+volatile bool haltSteppers = true;
 
 /* PRIVATE METHODS */
 
@@ -93,9 +94,16 @@ static void setNextSlice() {
 int main(void) {
 	stdio_init_all();
 
+	// set up time slice timer
 	// NB negative means to time between *starts* of callbacks
 	add_repeating_timer_us(-timeSliceDuration_us, timeSliceEvent, NULL, &timeSliceTimer);
 
+	// set up step timers
+	for (uint8_t i = 0; i < NUM_AXES; ++i) {
+		timerUserData_t * const axisUserData = &userData[i];
+		axisUserData->axis = i;
+		add_repeating_timer_us(-timeSliceDuration_us*2, makeStep, axisUserData, &stepTimer[i]);
+	}
 
 	return 0;
 }
